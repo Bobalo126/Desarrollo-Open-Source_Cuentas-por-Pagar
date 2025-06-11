@@ -1,8 +1,14 @@
 import React, { useEffect } from "react";
 import "./Login.css";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
+  const handleLogin = () => {
+    // Aquí puedes validar credenciales si quieres
+    navigate("/sistema/gestion-parametros");
+  };
+
   useEffect(() => {
     document.body.classList.add("login-background");
 
@@ -94,9 +100,9 @@ function Login() {
                     <h2>Iniciar Sesión</h2>
                     <input type="text" placeholder="Correo Electrónico" />
                     <input type="password" placeholder="Contraseña" />
-                    <Link to="/gestion-conceptos">
-                        <button type="button">Entrar</button>
-                    </Link>
+                    
+                        <button type="button" onClick={handleLogin}>Entrar</button>
+                    
                 </form>
 
                 <form className="formulario__register">
@@ -105,7 +111,9 @@ function Login() {
                     <input type="text" placeholder="Correo Electrónico" />
                     <input type="text" placeholder="Usuario" />
                     <input type="password" placeholder="Contraseña" />
-                    <button id="btn_registrarse">Registrarse</button>
+                    
+                      <button id="btn_registrarse" onClick={handleLogin}>Registrarse</button>
+                    
                 </form>
             </div>
         </div>

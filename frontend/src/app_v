@@ -1,0 +1,38 @@
+<Router>
+        <Routes>
+          {/* Redirigir "/" a "/login" */}
+          <Route path="/" element={<Navigate to="/login" />} />
+          
+          {/* Login independiente */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Páginas del sistema */}
+          <Route
+            path="/gestion-conceptos"
+            element={
+              <>
+                <Menu />
+                <GestionConceptos />
+              </>
+            }
+          />
+          <Route
+            path="/gestion-proveedores"
+            element={
+              <>
+                <Menu />
+                <GestionProveedores />
+              </>
+            }
+          />
+          <Route
+            path="/gestion-parametros"
+            element={
+              <>
+                <Menu />
+                <GestionParametros />
+              </>
+            }
+          />
+        </Routes>
+    </Router>
