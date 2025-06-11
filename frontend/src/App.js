@@ -1,6 +1,6 @@
 //@ts-nocheck
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Routes, Route} from "react-router-dom";
 import Menu from './components/Menu';
 import GestionConceptos from "./views/GestionConceptos";
 import GestionParametros from "./views/GestionParametros";
@@ -11,44 +11,17 @@ import Login from './views/Login';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Redirigir "/" a "/login" */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* Login independiente */}
-        <Route path="/login" element={<Login />} />
+    <Routes>
+      {/* RUTA DE LOGIN (SIN MENU) */}
+      <Route path="/" element={<Login />} />
 
-        {/* Páginas del sistema */}
-        <Route
-          path="/gestion-conceptos"
-          element={
-            <>
-              <Menu />
-              <GestionConceptos />
-            </>
-          }
-        />
-        <Route
-          path="/gestion-proveedores"
-          element={
-            <>
-              <Menu />
-              <GestionProveedores />
-            </>
-          }
-        />
-        <Route
-          path="/gestion-parametros"
-          element={
-            <>
-              <Menu />
-              <GestionParametros />
-            </>
-          }
-        />
-      </Routes>
-    </Router>
+      {/* RUTAS INTERNAS CON EL MENU */}
+      <Route path="/sistema" element={<Menu />}>
+        <Route path="gestion-parametros" element={<GestionParametros />} />
+        <Route path="gestion-proveedores" element={<GestionProveedores />} />
+        <Route path="gestion-conceptos" element={<GestionConceptos />} />
+      </Route>
+    </Routes>
   );
 }
 
