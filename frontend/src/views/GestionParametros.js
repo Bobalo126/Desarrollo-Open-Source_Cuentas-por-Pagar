@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button} from '@mui/material';
 
 function GestionParametros() {
-  const [parametros, setParametros] = useState([]);
+  const [datos, setDatos] = useState([]);
 
-  // Cargar datos desde el backend (simulado por ahora)
+  // Cargar datos desde el backend
   useEffect(() => {
-    // Aquí usarías fetch('http://localhost:3001/parametros') si ya tienes el backend
-    const datosSimulados = [
-      { anio_proceso: 2024, mes_proceso: 11, cierre_ejecutado: 'no' },
-      { anio_proceso: 2024, mes_proceso: 12, cierre_ejecutado: 'si' },
-      { anio_proceso: 2025, mes_proceso: 3, cierre_ejecutado: 'si' },
-    ];
-    setParametros(datosSimulados);
+    axios.get('http://localhost:3001/parametros')
+      .then(res => setDatos(res.data))
+      .catch(err => console.error(err));
   }, []);
 
   const handleEdit = (anio, mes) => {
@@ -37,7 +34,7 @@ function GestionParametros() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {parametros.map((fila) => (
+          {datos.map((fila) => (
             <TableRow key={`${fila.anio_proceso}-${fila.mes_proceso}`}>
               <TableCell>{fila.anio_proceso}</TableCell>
               <TableCell>{fila.mes_proceso}</TableCell>
