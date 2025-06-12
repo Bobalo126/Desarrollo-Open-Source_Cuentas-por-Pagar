@@ -34,7 +34,7 @@ export default function Menu() {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, pt: 0, px: 3, pb: 3 }}>
         <Outlet />
       </Box>
     </Box>
