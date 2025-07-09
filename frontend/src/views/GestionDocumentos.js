@@ -23,6 +23,12 @@ function GestionDocumentos() {
     obtenerProveedores();
   }, []);
 
+  const [filtro, setFiltro] = useState({
+  proveedor_id: '',
+  estado: ''
+});
+
+
   const obtenerDocumentos = () => {
     axios.get('http://localhost:3001/documentos')
       .then(res => setDocumentos(res.data))
@@ -36,6 +42,7 @@ function GestionDocumentos() {
   };
 
   const handleAgregar = () => {
+    if (!validarFormulario()) return;
     axios.post('http://localhost:3001/documentos', nuevo)
       .then(() => {
         setNuevo({
@@ -81,6 +88,54 @@ axios.put(`http://localhost:3001/documentos/${editando.id}`, datos)
       .catch(err => console.error('Error al eliminar:', err));
   };
 
+  const aplicarFiltros = () => {
+  const params = new URLSearchParams();
+
+  if (filtro.proveedor_id) params.append('proveedor_id', filtro.proveedor_id);
+  if (filtro.estado) params.append('estado', filtro.estado);
+
+  axios.get(`http://localhost:3001/documentos?${params.toString()}`)
+    .then(res => setDocumentos(res.data))
+    .catch(err => console.error('Error al filtrar documentos:', err));
+};
+
+const limpiarFiltros = () => {
+  setFiltro({ proveedor_id: '', estado: '' });
+  obtenerDocumentos();
+};
+
+const validarFormulario = () => {
+  if (!nuevo.numero_factura.trim()) {
+    alert('El número de factura es obligatorio.');
+    return false;
+  }
+
+  if (!nuevo.fecha_documento) {
+    alert('La fecha del documento es obligatoria.');
+    return false;
+  }
+
+  const montoNum = parseFloat(nuevo.monto);
+  if (isNaN(montoNum) || montoNum <= 0) {
+    alert('El monto debe ser un número positivo mayor a cero.');
+    return false;
+  }
+
+  if (!nuevo.proveedor_id) {
+    alert('Debe seleccionar un proveedor.');
+    return false;
+  }
+
+  if (!['Pendiente', 'Pagado'].includes(nuevo.estado)) {
+    alert('El estado debe ser Pendiente o Pagado.');
+    return false;
+  }
+
+  return true;
+};
+
+
+
   return (
     <div>
       <h2 style={{ marginTop: 0 }}>Entrada de Documentos x Pagar</h2>
@@ -122,6 +177,33 @@ axios.put(`http://localhost:3001/documentos/${editando.id}`, datos)
         </Select>
         <Button variant="contained" onClick={handleAgregar}>Agregar</Button>
       </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', marginBottom: '1em' }}>
+  <Select
+    value={filtro.proveedor_id}
+    onChange={e => setFiltro({ ...filtro, proveedor_id: e.target.value })}
+    displayEmpty
+  >
+    <MenuItem value="">Todos los proveedores</MenuItem>
+    {proveedores.map(p => (
+      <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
+    ))}
+  </Select>
+
+  <Select
+    value={filtro.estado}
+    onChange={e => setFiltro({ ...filtro, estado: e.target.value })}
+    displayEmpty
+  >
+    <MenuItem value="">Todos los estados</MenuItem>
+    <MenuItem value="Pendiente">Pendiente</MenuItem>
+    <MenuItem value="Pagado">Pagado</MenuItem>
+  </Select>
+
+  <Button variant="outlined" onClick={() => aplicarFiltros()}>Buscar</Button>
+  <Button variant="text" onClick={() => limpiarFiltros()}>Limpiar</Button>
+</div>
+
 
       <TableContainer component={Paper}>
         <Table>

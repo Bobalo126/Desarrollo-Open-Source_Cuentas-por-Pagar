@@ -148,16 +148,32 @@ app.delete('/proveedores/:id', (req, res) => {
 
 // Gestión de Entrada de Documentos x Pagar
 app.get('/documentos', (req, res) => {
-  const sql = `
+  const { proveedor_id, estado } = req.query;
+
+  let sql = `
     SELECT d.*, p.nombre AS proveedor_nombre 
     FROM documentos d
     JOIN proveedores p ON d.proveedor_id = p.id
+    WHERE 1=1
   `;
-  db.query(sql, (err, results) => {
+  const params = [];
+
+  if (proveedor_id) {
+    sql += ' AND d.proveedor_id = ?';
+    params.push(proveedor_id);
+  }
+
+  if (estado) {
+    sql += ' AND d.estado = ?';
+    params.push(estado);
+  }
+
+  db.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Error al obtener documentos' });
     res.json(results);
   });
 });
+
 
 app.post('/documentos', (req, res) => {
   //console.log("Datos recibidos:", req.body);
