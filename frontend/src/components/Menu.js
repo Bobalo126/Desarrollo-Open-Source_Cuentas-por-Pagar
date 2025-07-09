@@ -28,6 +28,9 @@ export default function Menu() {
           <ListItem button component={Link} to="/sistema/gestion-parametros">
             <ListItemText primary="Gestión de Parámetros" />
           </ListItem>
+          <ListItem button component={Link} to="/sistema/gestion-documentos">
+            <ListItemText primary="Entrada de Documentos" />
+          </ListItem>          
           <ListItem button component={Link} to="/">
             <ListItemText primary="Login" />
           </ListItem>

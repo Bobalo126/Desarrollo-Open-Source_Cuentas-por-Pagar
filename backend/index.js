@@ -146,6 +146,63 @@ app.delete('/proveedores/:id', (req, res) => {
   });
 });
 
+// Gestión de Entrada de Documentos x Pagar
+app.get('/documentos', (req, res) => {
+  const sql = `
+    SELECT d.*, p.nombre AS proveedor_nombre 
+    FROM documentos d
+    JOIN proveedores p ON d.proveedor_id = p.id
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error al obtener documentos' });
+    res.json(results);
+  });
+});
+
+app.post('/documentos', (req, res) => {
+  const { numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
+  const fecha_registro = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const sql = `
+    INSERT INTO documentos 
+    (numero_documento, numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [numero_documento, numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado || 'Pendiente'], (err) => {
+    if (err) return res.status(500).json({ error: 'Error al crear documento' });
+    res.json({ message: 'Documento creado correctamente' });
+  });
+});
+
+app.put('/documentos/:id', (req, res) => {
+  const { id } = req.params;
+  const { numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
+
+  const sql = `
+    UPDATE documentos SET 
+    numero_documento = ?, 
+    numero_factura = ?, 
+    fecha_documento = ?, 
+    monto = ?, 
+    proveedor_id = ?, 
+    estado = ?
+    WHERE id = ?
+  `;
+
+  db.query(sql, [numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado, id], (err) => {
+    if (err) return res.status(500).json({ error: 'Error al actualizar documento' });
+    res.json({ message: 'Documento actualizado correctamente' });
+  });
+});
+
+app.delete('/documentos/:id', (req, res) => {
+  db.query('DELETE FROM documentos WHERE id = ?', [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: 'Error al eliminar documento' });
+    res.json({ message: 'Documento eliminado correctamente' });
+  });
+});
+
 
 const PORT = 3001;
 app.listen(PORT, () => {
