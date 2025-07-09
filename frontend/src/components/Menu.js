@@ -1,9 +1,25 @@
 import { Link, Outlet } from "react-router-dom";
-import { Drawer, List, ListItem, ListItemText, Box } from "@mui/material";
+import { Drawer, List, ListItem, ListItemText, Box, Button } from "@mui/material";
+import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+import { useState } from "react";
 
 const drawerWidth = 240;
 
 export default function Menu() {
+  const [user, setUser] = useState(null);
+
+  const handleLoginSuccess = (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+    setUser(decoded);
+    console.log("Usuario logueado:", decoded);
+  };
+
+  const handleLogout = () => {
+    googleLogout();
+    setUser(null);
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <Drawer
@@ -30,9 +46,22 @@ export default function Menu() {
           </ListItem>
           <ListItem button component={Link} to="/sistema/gestion-documentos">
             <ListItemText primary="Entrada de Documentos" />
-          </ListItem>          
-          <ListItem button component={Link} to="/">
-            <ListItemText primary="Login" />
+          </ListItem>
+
+          <ListItem>
+            {user ? (
+              <Box>
+                {/* <div style={{ fontSize: '14px' }}>{user.name}</div> */}
+                <Button onClick={handleLogout} variant="outlined" size="small">
+                  Cerrar sesión
+                </Button>
+              </Box>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={() => console.log("Error al iniciar sesión con Google")}
+              />
+            )}
           </ListItem>
         </List>
       </Drawer>
@@ -43,3 +72,4 @@ export default function Menu() {
     </Box>
   );
 }
+

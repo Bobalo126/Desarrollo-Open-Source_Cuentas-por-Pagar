@@ -1,0 +1,26 @@
+.menu-sidebar {
+  width: 250px;
+  background-color: #f5f5f5;
+  padding: 20px;
+  height: 100vh;
+  position: fixed;
+}
+
+.menu-links {
+  list-style-type: none;
+  padding: 0;
+}
+
+.menu-links li {
+  margin: 15px 0;
+}
+
+.menu-links a {
+  text-decoration: none;
+  color: #4b0082;
+  font-weight: bold;
+}
+
+.menu-login {
+  margin-top: 40px;
+}
