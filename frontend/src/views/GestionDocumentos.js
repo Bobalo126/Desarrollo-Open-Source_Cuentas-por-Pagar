@@ -10,7 +10,6 @@ function GestionDocumentos() {
   const [documentos, setDocumentos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [nuevo, setNuevo] = useState({
-    numero_documento: '',
     numero_factura: '',
     fecha_documento: '',
     monto: '',
@@ -40,7 +39,6 @@ function GestionDocumentos() {
     axios.post('http://localhost:3001/documentos', nuevo)
       .then(() => {
         setNuevo({
-          numero_documento: '',
           numero_factura: '',
           fecha_documento: '',
           monto: '',
@@ -58,13 +56,24 @@ function GestionDocumentos() {
   };
 
   const handleGuardar = () => {
-    axios.put(`http://localhost:3001/documentos/${editando.id}`, editando)
-      .then(() => {
-        setEditando(null);
-        obtenerDocumentos();
-      })
-      .catch(err => console.error('Error al editar:', err));
-  };
+    console.log('Guardando documento:', editando)
+ const datos = {
+  numero_factura: editando.numero_factura,
+  fecha_documento: editando.fecha_documento,
+  monto: editando.monto,
+  proveedor_id: editando.proveedor_id,
+  estado: editando.estado
+};
+
+axios.put(`http://localhost:3001/documentos/${editando.id}`, datos)
+  .then(() => {
+    setEditando(null);
+    obtenerDocumentos();
+  })
+  .catch(err => console.error('Error al editar:', err));
+
+};
+
 
   const handleDelete = (id) => {
     axios.delete(`http://localhost:3001/documentos/${id}`)
@@ -76,11 +85,6 @@ function GestionDocumentos() {
     <div>
       <h2 style={{ marginTop: 0 }}>Entrada de Documentos x Pagar</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', marginBottom: '1em' }}>
-        <TextField
-          label="No. Documento"
-          value={nuevo.numero_documento}
-          onChange={e => setNuevo({ ...nuevo, numero_documento: e.target.value })}
-        />
         <TextField
           label="No. Factura"
           value={nuevo.numero_factura}
@@ -135,11 +139,7 @@ function GestionDocumentos() {
           <TableBody>
             {documentos.map(doc => (
               <TableRow key={doc.id}>
-                <TableCell>
-                  {editando?.id === doc.id
-                    ? <TextField value={editando.numero_documento} onChange={e => setEditando({ ...editando, numero_documento: e.target.value })} />
-                    : doc.numero_documento}
-                </TableCell>
+                <TableCell>{doc.numero_documento}</TableCell>
                 <TableCell>
                   {editando?.id === doc.id
                     ? <TextField value={editando.numero_factura} onChange={e => setEditando({ ...editando, numero_factura: e.target.value })} />

@@ -160,38 +160,56 @@ app.get('/documentos', (req, res) => {
 });
 
 app.post('/documentos', (req, res) => {
-  const { numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
-  const fecha_registro = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  //console.log("Datos recibidos:", req.body);
+  const { numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
+  const fecha_registro = new Date().toISOString().slice(0, 10);
 
-  const sql = `
+  const insertSql = `
     INSERT INTO documentos 
-    (numero_documento, numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    (numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado) 
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
+//console.log('Insertando con:', numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado);
 
-  db.query(sql, [numero_documento, numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado || 'Pendiente'], (err) => {
-    if (err) return res.status(500).json({ error: 'Error al crear documento' });
-    res.json({ message: 'Documento creado correctamente' });
+  db.query(insertSql, [numero_factura, fecha_documento, monto, fecha_registro, proveedor_id, estado || 'Pendiente'], (err, result) => {
+    if (err) {
+  console.error('Error en INSERT:', err);
+  return res.status(500).json({ error: 'Error al crear documento', detalle: err.message });
+}
+
+    const id = result.insertId;
+    const numero_documento = `DOC-${String(id).padStart(5, '0')}`;
+
+    const updateSql = `UPDATE documentos SET numero_documento = ? WHERE id = ?`;
+    db.query(updateSql, [numero_documento, id], (err2) => {
+      if (err2) return res.status(500).json({ error: 'Error al asignar número de documento' });
+
+      res.json({ message: 'Documento creado con número automático', numero_documento });
+    });
   });
 });
 
+
+
 app.put('/documentos/:id', (req, res) => {
-  const { id } = req.params;
-  const { numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
+  let { numero_factura, fecha_documento, monto, proveedor_id, estado } = req.body;
+  fecha_documento = fecha_documento.split('T')[0];
+
+  console.log('Datos recibidos en PUT:', req.body);
+  console.log('ID recibido por params:', req.params.id);
 
   const sql = `
-    UPDATE documentos SET 
-    numero_documento = ?, 
-    numero_factura = ?, 
-    fecha_documento = ?, 
-    monto = ?, 
-    proveedor_id = ?, 
-    estado = ?
+    UPDATE documentos
+    SET numero_factura = ?, fecha_documento = ?, monto = ?, proveedor_id = ?, estado = ?
     WHERE id = ?
   `;
 
-  db.query(sql, [numero_documento, numero_factura, fecha_documento, monto, proveedor_id, estado, id], (err) => {
-    if (err) return res.status(500).json({ error: 'Error al actualizar documento' });
+  db.query(sql, [numero_factura, fecha_documento, monto, proveedor_id, estado, req.params.id], (err) => {
+    if (err) {
+      console.error('Error en UPDATE:', err);
+      return res.status(500).json({ error: 'Error al actualizar documento', detalle: err.message });
+    }
+
     res.json({ message: 'Documento actualizado correctamente' });
   });
 });
