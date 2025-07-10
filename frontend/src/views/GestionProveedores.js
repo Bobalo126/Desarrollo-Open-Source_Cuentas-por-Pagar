@@ -27,18 +27,68 @@ function GestionProveedores() {
       .then(res => setProveedores(res.data))
       .catch(err => console.error('Error al obtener proveedores:', err));
   };
+  const validarCedula = (cedula) => {
+  const vcCedula = cedula.replace(/-/g, '');
+  if (vcCedula.length !== 11) return false;
+
+  const digitoMult = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1];
+  let total = 0;
+
+  for (let i = 0; i < 11; i++) {
+    const digito = parseInt(vcCedula[i]);
+    const multiplicado = digito * digitoMult[i];
+    total += multiplicado < 10 ? multiplicado : Math.floor(multiplicado / 10) + (multiplicado % 10);
+  }
+
+  return total % 10 === 0;
+};
+
+  const validarRNC = (rnc) => {
+  if (rnc.length !== 9) return false;
+
+  const peso = [7, 9, 8, 6, 5, 4, 3, 2];
+  let suma = 0;
+
+  for (let i = 0; i < 8; i++) {
+    const digito = parseInt(rnc[i]);
+    if (isNaN(digito)) return false;
+    suma += digito * peso[i];
+  }
+
+  const resto = suma % 11;
+  let digitoVerificador;
+
+  if (resto === 0) digitoVerificador = 2;
+  else if (resto === 1) digitoVerificador = 1;
+  else digitoVerificador = 11 - resto;
+
+  return digitoVerificador === parseInt(rnc[8]);
+};
+
 
   const validar = (p) => {
-    if (!p.nombre.trim() || !p.cedula_rnc.trim()) {
-      alert('Nombre y Cédula/RNC son obligatorios.');
-      return false;
-    }
-    if (isNaN(p.balance) || Number(p.balance) < 0) {
-      alert('El balance debe ser un número positivo.');
-      return false;
-    }
-    return true;
-  };
+  if (!p.nombre.trim() || !p.cedula_rnc.trim()) {
+    alert('Nombre y Cédula/RNC son obligatorios.');
+    return false;
+  }
+  if (isNaN(p.balance) || Number(p.balance) < 0) {
+    alert('El balance debe ser un número positivo.');
+    return false;
+  }
+
+  const rncOCedula = p.cedula_rnc.replace(/-/g, '');
+  if (p.tipo_persona === 'fisica' && !validarCedula(rncOCedula)) {
+    alert('Cédula no válida.');
+    return false;
+  }
+  if (p.tipo_persona === 'juridica' && !validarRNC(rncOCedula)) {
+    alert('RNC no válido.');
+    return false;
+  }
+
+  return true;
+};
+
 
   const handleAgregar = () => {
     if (!validar(nuevo)) return;
