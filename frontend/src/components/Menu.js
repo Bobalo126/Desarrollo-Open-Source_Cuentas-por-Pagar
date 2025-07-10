@@ -10,8 +10,38 @@ export default function Menu() {
   const [user, setUser] = useState(null);
   const [rol, setRol] = useState(null);
 
+  useEffect(() => {
+  const token = sessionStorage.getItem("token");
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      setUser(decoded);
+
+      fetch('http://localhost:3001/login-google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: decoded.name,
+          correo: decoded.email
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        setRol(data.rol);
+      })
+      .catch(err => console.error("Error obteniendo rol:", err));
+    } catch (error) {
+      sessionStorage.removeItem("token");
+      setUser(null);
+      setRol(null);
+    }
+  }
+}, []);
+
+
   const handleLoginSuccess = (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
+    sessionStorage.setItem("token", credentialResponse.credential);
     setUser(decoded);
 
     fetch('http://localhost:3001/login-google', {
@@ -31,10 +61,13 @@ export default function Menu() {
   };
 
   const handleLogout = () => {
-    googleLogout();
-    setUser(null);
-    setRol(null);
-  };
+  googleLogout();
+  sessionStorage.removeItem("token");
+  setUser(null);
+  setRol(null);
+  window.location.href = "/";
+};
+
 
   return (
     <Box sx={{ display: "flex" }}>

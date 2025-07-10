@@ -1,43 +1,37 @@
 import React, { useEffect } from "react";
-import "./Login.css";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
     document.body.classList.add("login-background");
-    return () => document.body.classList.remove("login-background");
+    return () => {
+      document.body.classList.remove("login-background");
+    };
   }, []);
 
-  const handleSuccess = (credentialResponse) => {
-    console.log("Login exitoso:", credentialResponse);
-    localStorage.setItem("google_token", credentialResponse.credential);
-    navigate("/sistema/gestion-parametros");
+  const handleLoginSuccess = (credentialResponse) => {
+    sessionStorage.setItem("token", credentialResponse.credential);
+    window.location.reload();
   };
 
-  const handleError = () => {
+  const handleLoginError = () => {
     alert("Error al iniciar sesión con Google");
   };
 
   return (
-    <main>
-      <div className="contenedor__todo">
-        <div className="caja__trasera">
-          <div className="caja__trasera-login">
-            <h3>Bienvenido</h3>
-            <p>Inicia sesión para entrar al sistema</p>
-          </div>
-        </div>
-
-        <div className="contenedor__login-register">
-          <form className="formulario__login" style={{ display: "block", opacity: 1 }}>
-            <h2>Iniciar Sesión</h2>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
-              <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
-            </div>
-          </form>
+    <main className="login-container">
+      <div className="login-card">
+        <h2>Bienvenido</h2>
+        <p>Inicia sesión con Google para continuar</p>
+        <div className="login-button">
+          <GoogleLogin
+            onSuccess={handleLoginSuccess}
+            onError={handleLoginError}
+          />
         </div>
       </div>
     </main>
