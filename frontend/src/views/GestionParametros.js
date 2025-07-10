@@ -94,7 +94,7 @@ function GestionParametros() {
   return (
     <div style={{ padding: 20 }}>
       <h2>Gestión de Parámetros</h2>
-
+      <br/>
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
         <TextField label="Año" type="number" value={nuevo.anio_proceso}
           onChange={e => setNuevo({ ...nuevo, anio_proceso: e.target.value })} />

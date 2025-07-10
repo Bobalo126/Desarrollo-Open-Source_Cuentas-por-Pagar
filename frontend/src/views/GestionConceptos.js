@@ -74,6 +74,7 @@ function GestionConceptos() {
   return (
     <div>
       <h2 style={{ marginTop: 0 }}>Gestión de Conceptos</h2>
+      <br/>
 
       <div style={{ display: 'flex', gap: '1em', marginBottom: '1em' }}>
         <TextField

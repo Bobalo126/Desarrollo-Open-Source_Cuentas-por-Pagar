@@ -139,6 +139,7 @@ const validarFormulario = () => {
   return (
     <div>
       <h2 style={{ marginTop: 0 }}>Entrada de Documentos x Pagar</h2>
+      <br/>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', marginBottom: '1em' }}>
         <TextField
           label="No. Factura"
