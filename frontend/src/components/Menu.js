@@ -2,22 +2,38 @@ import { Link, Outlet } from "react-router-dom";
 import { Drawer, List, ListItem, ListItemText, Box, Button } from "@mui/material";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const drawerWidth = 240;
 
 export default function Menu() {
   const [user, setUser] = useState(null);
+  const [rol, setRol] = useState(null);
 
   const handleLoginSuccess = (credentialResponse) => {
     const decoded = jwtDecode(credentialResponse.credential);
     setUser(decoded);
-    console.log("Usuario logueado:", decoded);
+
+    fetch('http://localhost:3001/login-google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: decoded.name,
+        correo: decoded.email
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      setRol(data.rol); // ← Establece el rol desde backend
+      console.log("Rol obtenido:", data.rol);
+    })
+    .catch(err => console.error("Error obteniendo rol:", err));
   };
 
   const handleLogout = () => {
     googleLogout();
     setUser(null);
+    setRol(null);
   };
 
   return (
@@ -48,10 +64,15 @@ export default function Menu() {
             <ListItemText primary="Entrada de Documentos" />
           </ListItem>
 
+          {rol === "admin" && (
+            <ListItem button component={Link} to="/sistema/gestion-usuarios">
+              <ListItemText primary="Gestión de Usuarios" />
+            </ListItem>
+          )}
+
           <ListItem>
             {user ? (
               <Box>
-                {/* <div style={{ fontSize: '14px' }}>{user.name}</div> */}
                 <Button onClick={handleLogout} variant="outlined" size="small">
                   Cerrar sesión
                 </Button>

@@ -91,7 +91,7 @@ function GestionProveedores() {
   return (
     <div>
       <h2 style={{ marginTop: 0 }}>Gestión de Proveedores</h2>
-
+      <br/>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', marginBottom: '1em' }}>
         <TextField
           label="Nombre"

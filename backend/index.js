@@ -237,6 +237,60 @@ app.delete('/documentos/:id', (req, res) => {
   });
 });
 
+//Gestion de usuarios
+app.post('/login-google', (req, res) => {
+  const { nombre, correo } = req.body;
+  const fecha = new Date();
+
+  db.query(
+    'SELECT * FROM usuarios WHERE correo = ?',
+    [correo],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: 'Error en consulta' });
+
+      if (results.length === 0) {
+        // No existe: lo creamos
+        db.query(
+          'INSERT INTO usuarios (nombre, correo, ultima_sesion) VALUES (?, ?, ?)',
+          [nombre, correo, fecha],
+          (err2) => {
+            if (err2) return res.status(500).json({ error: 'Error al registrar usuario' });
+            return res.json({ rol: 'usuario' });
+          }
+        );
+      } else {
+        // Ya existe: actualizamos última sesión
+        db.query(
+          'UPDATE usuarios SET ultima_sesion = ? WHERE correo = ?',
+          [fecha, correo],
+          (err3) => {
+            if (err3) return res.status(500).json({ error: 'Error al actualizar sesión' });
+            return res.json({ rol: results[0].rol });
+          }
+        );
+      }
+    }
+  );
+});
+
+// Obtener todos los usuarios
+app.get('/usuarios', (req, res) => {
+  db.query('SELECT * FROM usuarios', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error al cargar usuarios' });
+    res.json(results);
+  });
+});
+
+// Actualizar rol
+app.put('/usuarios/:id/rol', (req, res) => {
+  const { rol } = req.body;
+  db.query('UPDATE usuarios SET rol = ? WHERE id = ?', [rol, req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: 'Error al actualizar rol' });
+    res.json({ message: 'Rol actualizado' });
+  });
+});
+
+
 
 const PORT = 3001;
 app.listen(PORT, () => {

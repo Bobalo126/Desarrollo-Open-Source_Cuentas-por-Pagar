@@ -6,6 +6,7 @@ import GestionConceptos from "./views/GestionConceptos";
 import GestionParametros from "./views/GestionParametros";
 import GestionProveedores from "./views/GestionProveedores";
 import GestionDocumentos from "./views/GestionDocumentos";
+import Usuarios from './views/GestionUsuarios';
 import Login from './views/Login';
 
 
@@ -20,6 +21,7 @@ function App() {
         <Route path="gestion-proveedores" element={<GestionProveedores />} />
         <Route path="gestion-conceptos" element={<GestionConceptos />} />
         <Route path="gestion-documentos" element={<GestionDocumentos />} />
+        <Route path="gestion-usuarios" element={<Usuarios />} />
       </Route>
     </Routes>
   );
