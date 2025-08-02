@@ -49,7 +49,7 @@ Esto levantará el servidor Express en el puerto 3001.
 Si ves el mensaje “Servidor corriendo en http://localhost:3001” en la terminal, todo está funcionando.
 
 #### Para iniciar el frontend:
-Abre una nueva terminal, ubícate en la carpeta frontend y ejecuta:
+Abre una nueva terminal, ubícate en la carpeta `frontend` y ejecuta:
 
 ```bash
 npm start
@@ -75,4 +75,4 @@ Base de datos: cuentasporpagar
 Puerto: 3306 (por defecto)
 ```
 
-Asegúrate de que el servidor MySQL esté activo antes de correr node index.js, y que la base de datos cuentasporpagar exista con las tablas necesarias.
+Asegúrate de que el servidor MySQL esté activo antes de correr node `index.js`, y que la base de datos `cuentasporpagar` exista con las tablas necesarias.
