@@ -10,6 +10,8 @@ import GestionProveedores from "./views/GestionProveedores";
 import GestionDocumentos from "./views/GestionDocumentos";
 import Usuarios from './views/GestionUsuarios';
 import Login from './views/Login';
+import GeneracionDePagos from "./views/GeneracionDePagos.js";
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -44,7 +46,8 @@ function App() {
             <Route path="gestion-conceptos" element={<GestionConceptos />} />
             <Route path="gestion-documentos" element={<GestionDocumentos />} />
             <Route path="gestion-usuarios" element={<Usuarios />} />
-          </Route>
+            <Route path="generacion-pagos" element={<GeneracionDePagos />} />
+          </Route> 
         </>
       )}
     </Routes>

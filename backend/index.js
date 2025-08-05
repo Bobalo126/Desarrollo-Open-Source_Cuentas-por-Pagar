@@ -347,6 +347,66 @@ app.put('/usuarios/:id/rol', (req, res) => {
   });
 });
 
+app.get('/api/facturas', (req, res) => {
+  const sql = 'SELECT * FROM facturas';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error al obtener facturas:', err);
+      return res.status(500).json({ error: 'Error al obtener facturas' });
+    }
+    res.json(results);
+  });
+});
+
+// Obtener documentos pendientes (estado = 'Pendiente')
+app.get('/pagos/pendientes', (req, res) => {
+  const sql = `
+    SELECT d.id, d.numero_factura, p.nombre AS proveedor, d.monto
+    FROM documentos d
+    JOIN proveedores p ON d.proveedor_id = p.id
+    WHERE d.estado = 'Pendiente'
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error al cargar documentos pendientes:', err);
+      return res.status(500).json({ error: 'Error al obtener documentos pendientes' });
+    }
+    res.json(results);
+  });
+});
+
+// Procesar pago
+app.post('/pagos/procesar', (req, res) => {
+  const { documentos, fecha_pago, concepto } = req.body;
+
+  if (!fecha_pago || !concepto || documentos.length === 0) {
+    return res.status(400).json({ error: 'Datos incompletos' });
+  }
+
+  const insertSql = `
+    INSERT INTO solicitudes_cheques (proveedor, fecha_pago, monto, concepto)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  documentos.forEach((doc) => {
+    db.query(
+      insertSql,
+      [doc.proveedor, fecha_pago, doc.monto, concepto],
+      (err) => {
+        if (err) console.error('Error al guardar solicitud:', err);
+      }
+    );
+
+    // Marcar el documento como "Pagado"
+    db.query('UPDATE documentos SET estado = "Pagado" WHERE id = ?', [doc.id], (err) => {
+      if (err) console.error('Error al actualizar estado del documento:', err);
+    });
+  });
+
+  res.json({ message: 'Pago procesado correctamente' });
+});
+
+
 
 // Iniciamos el servidor en el puerto 3001. Esto permite que el backend escuche solicitudes del frontend mandadas a este puerto.
 // Se puede cambiar este número si se necesita usar otro puerto disponible (ej. 3002, 8080, etc.)
