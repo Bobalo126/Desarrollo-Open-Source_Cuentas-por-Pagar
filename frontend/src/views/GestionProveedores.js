@@ -88,7 +88,7 @@ function GestionProveedores() {
 
   return true;
 };
-
+//cambio de preuba
 
   const handleAgregar = () => {
     if (!validar(nuevo)) return;
