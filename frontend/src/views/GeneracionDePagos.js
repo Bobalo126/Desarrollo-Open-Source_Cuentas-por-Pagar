@@ -111,29 +111,6 @@ export default function GenerarPago() {
           />
         </Grid>
 
-        {/* Encabezados */}
-        <Grid item xs={12} sm={1} textAlign="center">
-          <Typography variant="subtitle1" fontWeight="bold">
-            Seleccionar
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            No. Factura
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Proveedor
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Monto
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={2}></Grid>
-
         {/* Lista de documentos */}
         {documentos.map((doc) => (
           <React.Fragment key={doc.id}>
