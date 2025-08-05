@@ -366,6 +366,8 @@ app.get('/pagos/pendientes', (req, res) => {
     JOIN proveedores p ON d.proveedor_id = p.id
     WHERE d.estado = 'Pendiente'
   `;
+
+
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Error al cargar documentos pendientes:', err);

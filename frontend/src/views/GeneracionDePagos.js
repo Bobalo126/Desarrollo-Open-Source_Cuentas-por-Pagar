@@ -6,6 +6,8 @@ import {
   Paper,
   Grid,
   Checkbox,
+  Divider,
+  Box,
 } from "@mui/material";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -90,86 +92,78 @@ export default function GenerarPago() {
         Procesar Pago
       </Typography>
 
-      <Grid container spacing={3} alignItems="center">
-        {/* Fecha y Concepto */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            type="date"
-            label="Fecha de Pago"
-            InputLabelProps={{ shrink: true }}
-            value={fechaPago}
-            onChange={(e) => setFechaPago(e.target.value)}
-          />
+      {/* Sección de Fecha y Concepto */}
+      <Box mb={3} p={2} sx={{ backgroundColor: "#f9f9f9", borderRadius: 2 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Fecha de Pago"
+              InputLabelProps={{ shrink: true }}
+              value={fechaPago}
+              onChange={(e) => setFechaPago(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Concepto"
+              value={concepto}
+              onChange={(e) => setConcepto(e.target.value)}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Concepto"
-            value={concepto}
-            onChange={(e) => setConcepto(e.target.value)}
+      </Box>
+
+      {/* Lista de Documentos */}
+      {documentos.map((doc) => (
+        <Box key={doc.id} display="flex" alignItems="center" gap={2} mb={2}>
+          <Checkbox
+            checked={doc.seleccionado}
+            onChange={() => toggleSeleccionado(doc.id)}
+            size="small"
           />
+          <TextField
+            label="No. Factura"
+            size="small"
+            value={doc.noFactura}
+            onChange={(e) => actualizarCampo(doc.id, "noFactura", e.target.value)}
+          />
+          <TextField
+            label="Proveedor"
+            size="small"
+            value={doc.proveedor}
+            onChange={(e) => actualizarCampo(doc.id, "proveedor", e.target.value)}
+          />
+          <TextField
+            label="Monto"
+            size="small"
+            type="number"
+            inputProps={{ min: 0, step: "0.01" }}
+            value={doc.monto}
+            onChange={(e) => actualizarCampo(doc.id, "monto", e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={() => eliminarDocumento(doc.id)}
+          >
+            Eliminar
+          </Button>
+        </Box>
+      ))}
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* Total y Botones */}
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={4}>
+          <Typography variant="h6" fontWeight="bold">
+            Total a Pagar: ${totalPago.toFixed(2)}
+          </Typography>
         </Grid>
-
-        {/* Lista de documentos */}
-        {documentos.map((doc) => (
-          <React.Fragment key={doc.id}>
-            <Grid item xs={12} sm={1} textAlign="center">
-              <Checkbox
-                checked={doc.seleccionado}
-                onChange={() => toggleSeleccionado(doc.id)}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                fullWidth
-                size="small"
-                label="No. Factura"
-                value={doc.noFactura}
-                onChange={(e) => actualizarCampo(doc.id, "noFactura", e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Proveedor"
-                value={doc.proveedor}
-                onChange={(e) => actualizarCampo(doc.id, "proveedor", e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Monto"
-                inputProps={{ min: 0, step: "0.01" }}
-                value={doc.monto}
-                onChange={(e) => actualizarCampo(doc.id, "monto", e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} sm={2} textAlign="center">
-              <Button
-                variant="outlined"
-                color="error"
-                size="small"
-                onClick={() => eliminarDocumento(doc.id)}
-              >
-                Eliminar
-              </Button>
-            </Grid>
-          </React.Fragment>
-        ))}
-
-        {/* Total, Agregar y Procesar PDF */}
-<Grid item xs={12} sm={4}>
-  <Typography variant="h6" fontWeight="bold" color="textPrimary">
-    Total a Pagar: ${totalPago.toFixed(2)}
-  </Typography>
-</Grid>
-
         <Grid item xs={12} sm={4}>
           <Button
             variant="contained"
