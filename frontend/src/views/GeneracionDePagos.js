@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Button,
-  TextField,
   Typography,
   Paper,
   Grid,
@@ -10,8 +9,12 @@ import {
   Box,
   MenuItem,
   Select,
-  FormControl,
   InputLabel,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -23,7 +26,6 @@ export default function GenerarPago() {
   const [documentos, setDocumentos] = useState([]);
   const [totalPago, setTotalPago] = useState(0);
 
-  // Cargar documentos pendientes al iniciar
   const cargarDocumentosPendientes = () => {
     fetch("http://localhost:3001/pagos/pendientes")
       .then((res) => res.json())
@@ -42,7 +44,6 @@ export default function GenerarPago() {
       );
   };
 
-  // Cargar conceptos disponibles
   useEffect(() => {
     fetch("http://localhost:3001/conceptos")
       .then((res) => res.json())
@@ -50,12 +51,10 @@ export default function GenerarPago() {
       .catch((error) => console.error("Error al cargar conceptos:", error));
   }, []);
 
-  // Cargar documentos pendientes al montar componente y después de cada pago procesado
   useEffect(() => {
     cargarDocumentosPendientes();
   }, []);
 
-  // Recalcular total al cambiar selección o documentos
   useEffect(() => {
     const total = documentos
       .filter((doc) => doc.seleccionado)
@@ -79,7 +78,6 @@ export default function GenerarPago() {
       return;
     }
 
-    // Preparar datos para enviar al backend
     const payload = {
       fecha_pago: fechaPago,
       concepto: concepto,
@@ -101,11 +99,8 @@ export default function GenerarPago() {
       })
       .then(() => {
         alert("Pago procesado correctamente");
-        // Generar PDF
         generarPDF(fechaPago, concepto, documentosSeleccionados);
-        // Recargar documentos pendientes
         cargarDocumentosPendientes();
-        // Reset campos
         setFechaPago("");
         setConcepto("");
       })
@@ -115,7 +110,6 @@ export default function GenerarPago() {
       });
   };
 
-  // Función para generar PDF
   const generarPDF = (fecha, concepto, documentosSeleccionados) => {
     const doc = new jsPDF();
     doc.text("Resumen de Pago", 14, 15);
@@ -144,95 +138,105 @@ export default function GenerarPago() {
   };
 
   return (
-    <Paper sx={{ p: 4, maxWidth: 900, mx: "auto", mt: 4 }}>
+    <Paper sx={{ p: 4, maxWidth: 1000, mx: "auto", mt: 4 }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Procesar Pago
+        💳 Procesar Pago
       </Typography>
 
-{/* Fecha y Concepto */}
-<Box mb={3} p={2} sx={{ backgroundColor: "#f9f9f9", borderRadius: 2 }}>
-  <Grid container spacing={2} alignItems="center">
-    <Grid item xs={12} sm={6}>
-      <TextField
-        fullWidth
-        type="date"
-        label="Fecha de Pago"
-        InputLabelProps={{ shrink: true }}
-        value={fechaPago || new Date().toISOString().split("T")[0]} // Valor por defecto hoy
-        onChange={(e) => setFechaPago(e.target.value)}
-      />
-    </Grid>
-    <Grid item xs={12} sm={6}>
-      <FormControl fullWidth>
-        <InputLabel id="label-concepto">Concepto</InputLabel>
-        <Select
-          labelId="label-concepto"
-          label="Concepto"
-          value={concepto}
-          onChange={(e) => setConcepto(e.target.value)}
-        >
-          {conceptosDisponibles.map((c) => (
-            <MenuItem key={c.id} value={c.descripcion}>
-              {c.descripcion}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Grid>
-  </Grid>
-</Box>
+      {/* Fecha y Concepto */}
+      <Box mb={3} p={2} sx={{ backgroundColor: "#f9f9f9", borderRadius: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6}>
+            <InputLabel>Fecha de Pago</InputLabel>
+            <input
+              type="date"
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+              }}
+              value={fechaPago || new Date().toISOString().split("T")[0]}
+              onChange={(e) => setFechaPago(e.target.value)}
+            />
+          </Grid>
+<Grid item xs={12} sm={6} sx={{ ml: { sm: 2, xs: 0 } }}>
+  <InputLabel>Concepto</InputLabel>
+  <Select
+    value={concepto}
+    onChange={(e) => setConcepto(e.target.value)}
+    style={{
+      width: "100%",
+      padding: "10px",
+      borderRadius: "8px",
+      border: "1px solid #ccc",
+      height: "40px",
+      backgroundColor: "white",
+    }}
+  >
+    {conceptosDisponibles.map((c) => (
+      <MenuItem key={c.id} value={c.descripcion}>
+        {c.descripcion}
+      </MenuItem>
+    ))}
+  </Select>
+</Grid>
 
-      {/* Lista de Documentos Pendientes */}
-      {documentos.map((doc) => (
-        <Box key={doc.id} display="flex" alignItems="center" gap={2} mb={2}>
-          <Checkbox
-            checked={doc.seleccionado}
-            onChange={() => toggleSeleccionado(doc.id)}
-            size="small"
-          />
-          <TextField
-            label="No. Factura"
-            size="small"
-            value={doc.noFactura}
-            InputProps={{ readOnly: true }}
-          />
-          <TextField
-            label="Proveedor"
-            size="small"
-            value={doc.proveedor}
-            InputProps={{ readOnly: true }}
-          />
-          <TextField
-            label="Monto"
-            size="small"
-            type="number"
-            value={doc.monto}
-            InputProps={{ readOnly: true }}
-          />
-        </Box>
-      ))}
+        </Grid>
+      </Box>
+
+      {/* Tabla de documentos */}
+      <Table>
+        <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
+          <TableRow>
+            <TableCell />
+            <TableCell>No. Factura</TableCell>
+            <TableCell>Proveedor</TableCell>
+            <TableCell align="right">Monto</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {documentos.map((doc) => (
+            <TableRow key={doc.id} hover>
+              <TableCell>
+                <Checkbox
+                  checked={doc.seleccionado}
+                  onChange={() => toggleSeleccionado(doc.id)}
+                  size="small"
+                />
+              </TableCell>
+              <TableCell>{doc.noFactura}</TableCell>
+              <TableCell>{doc.proveedor}</TableCell>
+              <TableCell align="right">
+                ${parseFloat(doc.monto).toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Total y Botones */}
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={6}>
-          <Typography variant="h6" fontWeight="bold">
-            Total a Pagar: ${totalPago.toFixed(2)}
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={procesarPago}
-            fullWidth
-            sx={{ py: 1.5 }}
-          >
-            💾 Procesar Pago y Generar PDF
-          </Button>
-        </Grid>
-      </Grid>
+      {/* Total y Botón */}
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+      >
+        <Typography variant="h6" fontWeight="bold">
+          Total a Pagar: ${totalPago.toLocaleString()}
+        </Typography>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={procesarPago}
+          sx={{ py: 1.5, px: 3 }}
+        >
+          💾 Procesar Pago y Generar PDF
+        </Button>
+      </Box>
     </Paper>
   );
 }
