@@ -97,8 +97,11 @@ export default function Menu() {
             <ListItemText primary="Entrada de Documentos" />
           </ListItem>
           <ListItem button component={Link} to="/sistema/generacion-pagos">
-  <ListItemText primary="Generación de Pagos" />
-</ListItem>
+            <ListItemText primary="Generación de Pagos" />
+          </ListItem>
+          <ListItem button component={Link} to="/sistema/cierre">
+            <ListItemText primary="Cierre del Periodo" />
+          </ListItem>
 
 
           {rol === "admin" && (

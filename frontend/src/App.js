@@ -11,6 +11,7 @@ import GestionDocumentos from "./views/GestionDocumentos";
 import Usuarios from './views/GestionUsuarios';
 import Login from './views/Login';
 import GeneracionDePagos from "./views/GeneracionDePagos.js";
+import CierrePeriodo from './views/CierrePeriodo';
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
             <Route path="gestion-documentos" element={<GestionDocumentos />} />
             <Route path="gestion-usuarios" element={<Usuarios />} />
             <Route path="generacion-pagos" element={<GeneracionDePagos />} />
+            <Route path="cierre" element={<CierrePeriodo />} />
           </Route> 
         </>
       )}

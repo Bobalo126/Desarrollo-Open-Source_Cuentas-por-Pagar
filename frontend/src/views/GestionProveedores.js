@@ -13,7 +13,6 @@ function GestionProveedores() {
     nombre: '',
     tipo_persona: 'fisica',
     cedula_rnc: '',
-    balance: '',
     estado: 'activo'
   });
   const [filtro, setFiltro] = useState({ texto: '', tipo: '', estado: '' });
@@ -27,79 +26,79 @@ function GestionProveedores() {
       .then(res => setProveedores(res.data))
       .catch(err => console.error('Error al obtener proveedores:', err));
   };
+
+  // -------- Validaciones de Cédula/RNC --------
   const validarCedula = (cedula) => {
-  const vcCedula = cedula.replace(/-/g, '');
-  if (vcCedula.length !== 11) return false;
+    const vcCedula = cedula.replace(/-/g, '');
+    if (vcCedula.length !== 11) return false;
 
-  const digitoMult = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1];
-  let total = 0;
+    const digitoMult = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1];
+    let total = 0;
 
-  for (let i = 0; i < 11; i++) {
-    const digito = parseInt(vcCedula[i]);
-    const multiplicado = digito * digitoMult[i];
-    total += multiplicado < 10 ? multiplicado : Math.floor(multiplicado / 10) + (multiplicado % 10);
-  }
-
-  return total % 10 === 0;
-};
+    for (let i = 0; i < 11; i++) {
+      const digito = parseInt(vcCedula[i]);
+      if (Number.isNaN(digito)) return false;
+      const multiplicado = digito * digitoMult[i];
+      total += multiplicado < 10
+        ? multiplicado
+        : Math.floor(multiplicado / 10) + (multiplicado % 10);
+    }
+    return total % 10 === 0;
+  };
 
   const validarRNC = (rnc) => {
-  if (rnc.length !== 9) return false;
+    const limpio = rnc.replace(/-/g, '');
+    if (limpio.length !== 9) return false;
 
-  const peso = [7, 9, 8, 6, 5, 4, 3, 2];
-  let suma = 0;
+    const peso = [7, 9, 8, 6, 5, 4, 3, 2];
+    let suma = 0;
 
-  for (let i = 0; i < 8; i++) {
-    const digito = parseInt(rnc[i]);
-    if (isNaN(digito)) return false;
-    suma += digito * peso[i];
-  }
+    for (let i = 0; i < 8; i++) {
+      const digito = parseInt(limpio[i]);
+      if (Number.isNaN(digito)) return false;
+      suma += digito * peso[i];
+    }
 
-  const resto = suma % 11;
-  let digitoVerificador;
+    const resto = suma % 11;
+    let dv;
+    if (resto === 0) dv = 2;
+    else if (resto === 1) dv = 1;
+    else dv = 11 - resto;
 
-  if (resto === 0) digitoVerificador = 2;
-  else if (resto === 1) digitoVerificador = 1;
-  else digitoVerificador = 11 - resto;
-
-  return digitoVerificador === parseInt(rnc[8]);
-};
-
+    return dv === parseInt(limpio[8]);
+  };
 
   const validar = (p) => {
-  if (!p.nombre.trim() || !p.cedula_rnc.trim()) {
-    alert('Nombre y Cédula/RNC son obligatorios.');
-    return false;
-  }
-  if (isNaN(p.balance) || Number(p.balance) < 0) {
-    alert('El balance debe ser un número positivo.');
-    return false;
-  }
-
-  const rncOCedula = p.cedula_rnc.replace(/-/g, '');
-  if (p.tipo_persona === 'fisica' && !validarCedula(rncOCedula)) {
-    alert('Cédula no válida.');
-    return false;
-  }
-  if (p.tipo_persona === 'juridica' && !validarRNC(rncOCedula)) {
-    alert('RNC no válido.');
-    return false;
-  }
-
-  return true;
-};
-
+    if (!p.nombre.trim() || !p.cedula_rnc.trim()) {
+      alert('Nombre y Cédula/RNC son obligatorios.');
+      return false;
+    }
+    const rncOCedula = p.cedula_rnc.replace(/-/g, '');
+    if (p.tipo_persona === 'fisica' && !validarCedula(rncOCedula)) {
+      alert('Cédula no válida.');
+      return false;
+    }
+    if (p.tipo_persona === 'juridica' && !validarRNC(rncOCedula)) {
+      alert('RNC no válido.');
+      return false;
+    }
+    return true;
+  };
 
   const handleAgregar = () => {
     if (!validar(nuevo)) return;
 
-    axios.post('http://localhost:3001/proveedores', nuevo)
+    axios.post('http://localhost:3001/proveedores', {
+      nombre: nuevo.nombre,
+      tipo_persona: nuevo.tipo_persona,
+      cedula_rnc: nuevo.cedula_rnc,
+      estado: nuevo.estado
+    })
       .then(() => {
         setNuevo({
           nombre: '',
           tipo_persona: 'fisica',
           cedula_rnc: '',
-          balance: '',
           estado: 'activo'
         });
         obtenerProveedores();
@@ -115,7 +114,12 @@ function GestionProveedores() {
   const handleGuardar = () => {
     if (!validar(editando)) return;
 
-    axios.put(`http://localhost:3001/proveedores/${editando.id}`, editando)
+    axios.put(`http://localhost:3001/proveedores/${editando.id}`, {
+      nombre: editando.nombre,
+      tipo_persona: editando.tipo_persona,
+      cedula_rnc: editando.cedula_rnc,
+      estado: editando.estado
+    })
       .then(() => {
         obtenerProveedores();
         setEditando(null);
@@ -160,12 +164,6 @@ function GestionProveedores() {
           label="Cédula/RNC"
           value={nuevo.cedula_rnc}
           onChange={e => setNuevo({ ...nuevo, cedula_rnc: e.target.value })}
-        />
-        <TextField
-          label="Balance"
-          type="number"
-          value={nuevo.balance}
-          onChange={e => setNuevo({ ...nuevo, balance: e.target.value })}
         />
         <Select
           value={nuevo.estado}
@@ -249,11 +247,7 @@ function GestionProveedores() {
                 </TableCell>
                 <TableCell>
                   {editando?.id === fila.id ? (
-                    <TextField
-                      type="number"
-                      value={editando.balance}
-                      onChange={e => setEditando({ ...editando, balance: e.target.value })}
-                    />
+                    <TextField type="number" value={fila.balance} disabled />
                   ) : fila.balance}
                 </TableCell>
                 <TableCell>
