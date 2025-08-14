@@ -172,7 +172,7 @@ app.get('/proveedores', (req, res) => {
 
 app.post('/proveedores', (req, res) => {
   const { nombre, tipo_persona, cedula_rnc, balance, estado } = req.body;
-  const sql = 'INSERT INTO proveedores (nombre, tipo_persona, cedula_rnc, balance, estado) VALUES (?, ?, ?, ?, ?)';
+  const sql = 'INSERT INTO proveedores (nombre, tipo_persona, cedula_rnc, balance, estado) VALUES (?, ?, ?, 0, ?)';
   db.query(sql, [nombre, tipo_persona, cedula_rnc, balance, estado], (err) => {
     if (err) return res.status(500).json({ error: 'Error al crear proveedor' });
     res.json({ message: 'Proveedor creado correctamente' });
@@ -182,7 +182,7 @@ app.post('/proveedores', (req, res) => {
 app.put('/proveedores/:id', (req, res) => {
   const { id } = req.params;
   const { nombre, tipo_persona, cedula_rnc, balance, estado } = req.body;
-  const sql = 'UPDATE proveedores SET nombre = ?, tipo_persona = ?, cedula_rnc = ?, balance = ?, estado = ? WHERE id = ?';
+  const sql = 'UPDATE proveedores SET nombre = ?, tipo_persona = ?, cedula_rnc = ?, estado = ? WHERE id = ?';
   db.query(sql, [nombre, tipo_persona, cedula_rnc, balance, estado, id], (err) => {
     if (err) return res.status(500).json({ error: 'Error al editar proveedor' });
     res.json({ message: 'Proveedor actualizado correctamente' });
@@ -236,6 +236,9 @@ app.post('/documentos', (req, res) => {
   console.error('Error en INSERT:', err);
   return res.status(500).json({ error: 'Error al crear documento', detalle: err.message });
 }
+  db.query('UPDATE proveedores SET balance = balance + ? WHERE id = ?', [monto, proveedor_id], (errBal) => {
+    if (errBal) console.error('Error al actualizar balance del proveedor:', errBal);
+  });
 
     const id = result.insertId;
     const numero_documento = `DOC-${String(id).padStart(5, '0')}`;
@@ -347,16 +350,16 @@ app.put('/usuarios/:id/rol', (req, res) => {
   });
 });
 
-app.get('/api/facturas', (req, res) => {
-  const sql = 'SELECT * FROM facturas';
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error al obtener facturas:', err);
-      return res.status(500).json({ error: 'Error al obtener facturas' });
-    }
-    res.json(results);
-  });
-});
+// app.get('/api/facturas', (req, res) => {
+//   const sql = 'SELECT * FROM facturas';
+//   db.query(sql, (err, results) => {
+//     if (err) {
+//       console.error('Error al obtener facturas:', err);
+//       return res.status(500).json({ error: 'Error al obtener facturas' });
+//     }
+//     res.json(results);
+//   });
+// });
 
 // Obtener documentos pendientes (estado = 'Pendiente')
 app.get('/pagos/pendientes', (req, res) => {
@@ -406,6 +409,182 @@ app.post('/pagos/procesar', (req, res) => {
   });
 
   res.json({ message: 'Pago procesado correctamente' });
+});
+
+//Proceso de Cierre
+//Obtener período de cierre
+app.get('/cierre/periodo', (req, res) => {
+  const sel = 'SELECT id, periodo FROM cierre_periodo ORDER BY id ASC LIMIT 1';
+  db.query(sel, (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Error al leer período de cierre' });
+
+    if (rows.length === 0) {
+      // Si no existe, lo creamos con el mes actual (día 1)
+      const hoy = new Date();
+      const anio = hoy.getFullYear();
+      const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
+      const periodo = `${anio}-${mes}-01`;
+
+      const ins = 'INSERT INTO cierre_periodo (periodo) VALUES (?)';
+      db.query(ins, [periodo], (err2) => {
+        if (err2) return res.status(500).json({ error: 'Error al inicializar período de cierre' });
+        return res.json({ id: 1, periodo });
+      });
+    } else {
+      res.json(rows[0]); // { id, periodo: 'YYYY-MM-01' }
+    }
+  });
+});
+
+// Fijar período de cierre
+app.put('/cierre/periodo', (req, res) => {
+  let { periodo, anio, mes } = req.body;
+
+  // Construir `periodo` si viene anio/mes
+  if (!periodo && anio && mes) {
+    mes = String(mes).padStart(2, '0');
+    periodo = `${anio}-${mes}-01`;
+  }
+
+  // Validaciones básicas
+  if (!periodo || !/^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
+    return res.status(400).json({ error: 'Debe enviar `periodo` con formato YYYY-MM-01 o `anio` y `mes` válidos.' });
+  }
+  // Forzar día 1 por convención
+  const y = periodo.slice(0, 4);
+  const m = periodo.slice(5, 7);
+  const periodoDia1 = `${y}-${m}-01`;
+
+  const sel = 'SELECT id FROM cierre_periodo ORDER BY id ASC LIMIT 1';
+  db.query(sel, (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Error verificando período de cierre' });
+
+    if (rows.length === 0) {
+      const ins = 'INSERT INTO cierre_periodo (periodo) VALUES (?)';
+      db.query(ins, [periodoDia1], (err2) => {
+        if (err2) return res.status(500).json({ error: 'Error al crear período de cierre' });
+        res.json({ message: 'Período de cierre creado', periodo: periodoDia1 });
+      });
+    } else {
+      const upd = 'UPDATE cierre_periodo SET periodo = ? WHERE id = ?';
+      db.query(upd, [periodoDia1, rows[0].id], (err3) => {
+        if (err3) return res.status(500).json({ error: 'Error al actualizar período de cierre' });
+        res.json({ message: 'Período de cierre actualizado', periodo: periodoDia1 });
+      });
+    }
+  });
+});
+
+app.get('/cierre/pagos-mes', (req, res) => {
+  const { anio, mes } = req.query;
+  if (!anio || !mes) return res.status(400).json({ error: 'anio y mes requeridos' });
+
+  const detalleSql = `
+    SELECT id, TRIM(proveedor) AS proveedor, fecha_pago, monto, concepto, cerrado
+    FROM solicitudes_cheques
+    WHERE YEAR(fecha_pago) = ? AND MONTH(fecha_pago) = ?
+    ORDER BY fecha_pago, id
+  `;
+  const resumenSql = `
+    SELECT TRIM(proveedor) AS proveedor, SUM(monto) AS total
+    FROM solicitudes_cheques
+    WHERE YEAR(fecha_pago) = ? AND MONTH(fecha_pago) = ?
+    GROUP BY TRIM(proveedor)
+    ORDER BY proveedor
+  `;
+
+  db.query(detalleSql, [anio, mes], (err, detalle) => {
+    if (err) return res.status(500).json({ error: 'Error al obtener detalle de pagos' });
+    db.query(resumenSql, [anio, mes], (err2, resumen) => {
+      if (err2) return res.status(500).json({ error: 'Error al obtener resumen de pagos' });
+      res.json({ detalle, resumen });
+    });
+  });
+});
+
+app.post('/cierre/ejecutar', (req, res) => {
+  const { anio, mes } = req.body;
+  if (!anio || !mes) return res.status(400).json({ error: 'anio y mes requeridos' });
+
+  // Verificar si hay pagos pendientes de cierre
+  const pendientesSql = `
+    SELECT TRIM(proveedor) AS proveedor, SUM(monto) AS total_pagado
+    FROM solicitudes_cheques
+    WHERE YEAR(fecha_pago) = ? AND MONTH(fecha_pago) = ?
+      AND cerrado = 0
+    GROUP BY TRIM(proveedor)
+  `;
+
+  db.query(pendientesSql, [anio, mes], (errPend, rowsPend) => {
+    if (errPend) {
+      console.error('Error verificando pagos pendientes de cierre:', errPend);
+      return res.status(500).json({ error: 'Error verificando pagos pendientes de cierre' });
+    }
+
+    if (rowsPend.length === 0) {
+      // Nada por cerrar (ya se cerró antes o no hubo pagos)
+      return res.status(409).json({ message: 'No hay pagos pendientes de cierre para ese período.' });
+    }
+
+    // Restar del balance SOLO lo aún no cerrado
+    const restarBalances = `
+      UPDATE proveedores p
+      JOIN (
+        SELECT TRIM(proveedor) AS proveedor, SUM(monto) AS total_pagado
+        FROM solicitudes_cheques
+        WHERE YEAR(fecha_pago) = ? AND MONTH(fecha_pago) = ?
+          AND cerrado = 0
+        GROUP BY TRIM(proveedor)
+      ) s ON s.proveedor = p.nombre
+      SET p.balance = p.balance - s.total_pagado
+    `;
+
+    db.query(restarBalances, [anio, mes], (errRest) => {
+      if (errRest) {
+        console.error('Error restando balances:', errRest);
+        return res.status(500).json({ error: 'Error actualizando balances' });
+      }
+
+      // Marcar como cerrados esos pagos
+      const marcarCerrados = `
+        UPDATE solicitudes_cheques
+        SET cerrado = 1
+        WHERE YEAR(fecha_pago) = ? AND MONTH(fecha_pago) = ?
+          AND cerrado = 0
+      `;
+      db.query(marcarCerrados, [anio, mes], (errMark) => {
+        if (errMark) {
+          console.error('Error marcando solicitudes como cerradas:', errMark);
+          return res.status(500).json({ error: 'Error marcando solicitudes cerradas' });
+        }
+
+        // Avanzar período guardado en cierre_periodo
+        let nuevoMes = Number(mes) + 1;
+        let nuevoAnio = Number(anio);
+        if (nuevoMes > 12) { nuevoMes = 1; nuevoAnio += 1; }
+        const nuevoPeriodo = `${nuevoAnio}-${String(nuevoMes).padStart(2, '0')}-01`;
+
+        const sel = 'SELECT id FROM cierre_periodo ORDER BY id ASC LIMIT 1';
+        db.query(sel, (e2, rows) => {
+          if (e2) return res.status(500).json({ error: 'Error leyendo período de cierre' });
+
+          if (rows.length === 0) {
+            const ins = 'INSERT INTO cierre_periodo (periodo) VALUES (?)';
+            db.query(ins, [nuevoPeriodo], (e3) => {
+              if (e3) return res.status(500).json({ error: 'Error creando nuevo período de cierre' });
+              res.json({ message: 'Cierre ejecutado', periodo: nuevoPeriodo });
+            });
+          } else {
+            const upd = 'UPDATE cierre_periodo SET periodo = ? WHERE id = ?';
+            db.query(upd, [nuevoPeriodo, rows[0].id], (e4) => {
+              if (e4) return res.status(500).json({ error: 'Error actualizando período de cierre' });
+              res.json({ message: 'Cierre ejecutado', periodo: nuevoPeriodo });
+            });
+          }
+        });
+      });
+    });
+  });
 });
 
 
